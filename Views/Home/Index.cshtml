@@ -1,0 +1,139 @@
+﻿@model  CognitiveServicesTestApp.Models.User
+
+<!-- 4:3 aspect ratio -->
+<div class="embed-responsive embed-responsive-4by3">
+    <canvas id="canvas"></canvas>
+    <video id="video" playsinline autoplay></video>
+
+</div>
+
+
+<div class="row">
+    <div class="col-sm-12 text-center">
+        <button id="licenseCapture">Capture License</button>
+        <button id="selfieCapture">Capture Selfie</button>
+    </div>
+</div>
+
+
+<form action="Home/Contact" method="POST">
+    <input type="text" name="licenseDataURI" id="licenseDataURI" value="" hidden/>
+    <input type="text" name="selfieDataURI" id="selfieDataURI" value="" hidden/>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <button class="btn-primary" id="compare">Compare</button>
+        </div>
+    </div>
+</form>
+
+
+
+<script type="text/javascript">
+
+    'use strict';
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const licenseCapture = document.getElementById("licenseCapture");
+    const selfieCapture = document.getElementById("selfieCapture");
+    const errorMsgElement = document.querySelector('span#errorMsg');
+
+    var selfieDataURI = '';
+    var licenseDataURI = '';
+
+    const licenseConstraints = {
+        audio: false,
+        video: {
+
+            facingMode: 'environment'
+
+        }
+
+    };
+
+    const selfieConstraints = {
+        audio: false,
+        video: {
+
+            facingMode: 'user'
+
+        }
+
+    };
+
+    // Access rear camera
+    async function initLicenseStream() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(licenseConstraints);
+            handleSuccess(stream);
+        } catch (e) {
+            errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+        }
+    }
+
+    // Access front camera
+    async function initSelfieStream() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(selfieConstraints);
+            handleSuccess(stream);
+        } catch (e) {
+            errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+        }
+    }
+
+    // Success
+    function handleSuccess(stream) {
+        window.stream = stream;
+        video.srcObject = stream;
+    }
+
+    // Load init
+    initLicenseStream();
+
+    // Draw image
+    var context = canvas.getContext('2d');
+    licenseCapture.addEventListener("click", function () {
+
+        canvas.height = video.clientHeight;
+        canvas.width = video.clientWidth;
+
+
+        video.style.display = 'none';
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        licenseDataURI = canvas.toDataURL();
+
+        document.getElementById('licenseDataURI').value = licenseDataURI;
+
+        
+
+        console.log('saved license data uri');
+
+        video.style.display = 'block';
+        initSelfieStream();
+
+
+
+    });
+
+    selfieCapture.addEventListener("click", function () {
+
+        canvas.height = video.clientHeight;
+        canvas.width = video.clientWidth;
+
+        video.style.display = 'none';
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        selfieDataURI = canvas.toDataURL();
+
+        document.getElementById('selfieDataURI').value = selfieDataURI;
+
+
+        console.log('saved selfie data uri');
+
+    });
+
+
+
+</script>
